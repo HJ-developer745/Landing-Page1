@@ -78,7 +78,7 @@
     color:var(--text);text-decoration:none;
     letter-spacing:-0.02em;
     padding-bottom:1.5rem;
-    border-b:1px solid var(--border);
+    border-bottom:1px solid var(--border);
   }
   .sidebar-brand .dot{
     width:32px;height:32px;border-radius:9px;
@@ -108,6 +108,7 @@
     cursor:pointer;
     transition:all 0.2s;
     text-align:left;
+    width:100%;
   }
   .nav-btn:hover, .nav-btn.active{
     background:var(--card);
@@ -448,7 +449,7 @@
         <p id="main-view-subtitle">Manage free download requests and replies to your prospects.</p>
       </div>
       <div>
-        <a href="/" target="_blank" class="btn-refresh" style="text-decoration:none;">
+        <a href="/" class="btn-refresh" style="text-decoration:none;">
           View Live Site ↗
         </a>
       </div>
@@ -509,7 +510,7 @@
           <div class="form-group">
             <label class="form-label" for="heroTitle">Hero Banner Heading (HTML tags allowed)</label>
             <input type="text" class="form-control" id="heroTitleInput" placeholder="The POS system your<br/><em>business deserves</em>" required />
-            <span style="font-size:0.75rem;color:var(--text3);margin-top:0.4rem;display:block;">Use <code>&lt;br/&gt;</code> to line break, and wrap words in <code>&lt;em&gt;text&lt;/em&gt;</code> for the beautiful gold underline layout.</span>
+            <span style="font-size:0.75rem;color:var(--text3);margin-top:0.4rem;display:block;">Use <code>&lt;br/&gt;</code> to line break, and wrap words in <code>&lt;em&gt;text&lt;/em&gt;</code> for the gold accent layout.</span>
           </div>
           
           <div class="form-group">
@@ -553,10 +554,8 @@
 <div class="toast" id="adminToast">Action completed successfully!</div>
 
 <script>
-  // Dynamic API setup
-  const API_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-    ? 'https://landing-page1-1.onrender.com/api'
-    : window.location.origin + 'https://landing-page1-1.onrender.com/api';
+  // Domain-agnostic API endpoint matching current host domain
+  const API_URL = '/api';
 
   let currentLeads = [];
   let selectedLeadId = null;
@@ -604,15 +603,7 @@
         calculateStats(currentLeads);
       }
     } catch (err) {
-      console.warn("Express server offline. Displaying client-side fallback demonstration records.", err);
-      // Dummy visual placeholder
-      const dummyLeads = [
-        { id: "1", name: "Anish Patel", business: "Mehta Food Plaza", email: "anish@example.com", phone: "+91 98921-22839", date: new Date().toISOString(), status: "pending", replyMessage: "" },
-        { id: "2", name: "Simran Kaur", business: "Brew & Bake", email: "simran@brewbake.co.in", phone: "+91 97712-44123", date: new Date(Date.now()-86400000).toISOString(), status: "replied", replyMessage: "Sent user manual & installer code." }
-      ];
-      currentLeads = dummyLeads;
-      renderLeadsTable(dummyLeads);
-      calculateStats(dummyLeads);
+      console.warn("Express server error.", err);
     }
   }
 
@@ -712,16 +703,7 @@
         fetchLeads();
       }
     } catch (err) {
-      // offline simulation fallback
-      const targetLead = currentLeads.find(l => l.id === selectedLeadId);
-      if (targetLead) {
-        targetLead.status = 'replied';
-        targetLead.replyMessage = replyMsg;
-        renderLeadsTable(currentLeads);
-        calculateStats(currentLeads);
-      }
-      showToast("Offline Simulation: Response saved!");
-      closeReplyDrawer();
+      console.warn("Error marking reply", err);
     }
   }
 
@@ -735,14 +717,11 @@
         fetchLeads();
       }
     } catch (err) {
-      currentLeads = currentLeads.filter(l => l.id !== leadId);
-      renderLeadsTable(currentLeads);
-      calculateStats(currentLeads);
-      showToast("Offline Simulation: Record deleted.");
+      console.warn("Error deleting record", err);
     }
   }
 
-  // 2. Fetch CMS Configuration
+  // Fetch CMS Configuration
   async function fetchCMSConfig() {
     try {
       const res = await fetch(`${API_URL}/config`);
@@ -752,9 +731,7 @@
         document.getElementById('heroSubInput').value = config.heroSub;
       }
     } catch (err) {
-      // Dummy UI Fill
-      document.getElementById('heroTitleInput').value = "The POS system your<br/><em>business deserves</em>";
-      document.getElementById('heroSubInput').value = "Serve Sync brings lightning-fast billing, smart inventory, and real-time reporting to restaurants, cafes, and retail shops — all in one elegant app.";
+      console.warn("Error loading config", err);
     }
   }
 
@@ -776,7 +753,7 @@
         showToast("CMS Changes published live!");
       }
     } catch (err) {
-      showToast("Offline Simulation: CMS settings saved.");
+      console.warn("Error updating CMS configs", err);
     }
   }
 
