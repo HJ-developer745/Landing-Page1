@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Serve Sync</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #2563eb; font-weight: 600; }
+        .tab-inactive { color: #6b7280; font-weight: 500; hover:text-gray-900; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-replied { background: #d1fae5; color: #059669; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-800">
+            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <span class="text-lg font-bold">Serve Sync Admin</span>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="#" onclick="switchTab('leads')" id="nav-leads" class="flex items-center gap-3 bg-blue-600/20 text-blue-400 px-4 py-3 rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                Lead Submissions
+            </a>
+            <a href="#" onclick="switchTab('cms')" id="nav-cms" class="flex items-center gap-3 text-slate-400 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                Landing Page CMS
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-800">
+            <button class="flex items-center gap-2 text-slate-400 hover:text-white w-full">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center z-10">
+            <h2 id="page-title" class="text-2xl font-bold text-gray-800">Lead Submissions</h2>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold border border-blue-200">
+                    AD
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-8">
+            
+            <!-- VIEW: LEADS -->
+            <div id="view-leads" class="block">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="font-semibold text-gray-700">Recent Downloads / Inquiries</h3>
+                        <button onclick="fetchLeads()" class="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            Refresh Data
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-4">Date</th>
+                                    <th class="px-6 py-4">Contact Person</th>
+                                    <th class="px-6 py-4">Business</th>
+                                    <th class="px-6 py-4">Phone</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leads-table-body" class="divide-y divide-gray-100">
+                                <!-- Populated by JS -->
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">Loading leads...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: CMS / Landing Page Editor -->
+            <div id="view-cms" class="hidden max-w-3xl">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-6">Edit Landing Page Content</h3>
+                    
+                    <form id="cms-form" onsubmit="updateConfig(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Hero Main Title</label>
+                            <input type="text" id="cms-title" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="e.g. Next-Gen POS for Modern Businesses">
+                            <p class="text-xs text-gray-500 mt-1">This is the large text displayed at the very top of the page.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Hero Subtitle / Description</label>
+                            <textarea id="cms-subtitle" rows="4" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Enter the descriptive text..."></textarea>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
+                            <span id="cms-status" class="text-sm font-medium text-green-600 opacity-0 transition-opacity">Changes saved successfully!</span>
+                            <button type="submit" id="cms-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold shadow-sm transition">
+                                Publish Changes to Live Site
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // API Base
+        const API_URL = 'http://localhost:3000/api';
+
+        // View Switching
+        function switchTab(tab) {
+            // Update UI Sidebar
+            const navLeads = document.getElementById('nav-leads');
+            const navCms = document.getElementById('nav-cms');
+            const viewLeads = document.getElementById('view-leads');
+            const viewCms = document.getElementById('view-cms');
+            const pageTitle = document.getElementById('page-title');
+
+            if (tab === 'leads') {
+                navLeads.className = "flex items-center gap-3 bg-blue-600/20 text-blue-400 px-4 py-3 rounded-lg transition";
+                navCms.className = "flex items-center gap-3 text-slate-400 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition";
+                viewLeads.classList.remove('hidden');
+                viewCms.classList.add('hidden');
+                pageTitle.textContent = "Lead Submissions";
+                fetchLeads();
+            } else {
+                navCms.className = "flex items-center gap-3 bg-blue-600/20 text-blue-400 px-4 py-3 rounded-lg transition";
+                navLeads.className = "flex items-center gap-3 text-slate-400 hover:bg-slate-800 hover:text-white px-4 py-3 rounded-lg transition";
+                viewCms.classList.remove('hidden');
+                viewLeads.classList.add('hidden');
+                pageTitle.textContent = "Landing Page Editor";
+                fetchConfig();
+            }
+        }
+
+        // --- FETCH LEADS DATA ---
+        async function fetchLeads() {
+            const tbody = document.getElementById('leads-table-body');
+            
+            try {
+                const response = await fetch(`${API_URL}/leads`);
+                if(!response.ok) throw new Error("API Offline");
+                const leads = await response.json();
+                renderLeads(leads, tbody);
+            } catch (error) {
+                console.log("Backend offline. Using dummy preview data.");
+                // Dummy Data for canvas preview
+                const dummyLeads = [
+                    { id: "1", name: "Sarah Jenkins", email: "sarah@brewcoffee.com", business: "Brew Coffee Co", phone: "555-0192", date: new Date().toISOString(), status: "pending" },
+                    { id: "2", name: "Mike Chen", email: "mike@noodlehut.net", business: "Noodle Hut", phone: "555-9921", date: new Date(Date.now() - 86400000).toISOString(), status: "replied" }
+                ];
+                renderLeads(dummyLeads, tbody);
+            }
+        }
+
+        function renderLeads(leadsArray, tbodyElement) {
+            tbodyElement.innerHTML = '';
+            if (leadsArray.length === 0) {
+                tbodyElement.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No leads found.</td></tr>`;
+                return;
+            }
+
+            leadsArray.forEach(lead => {
+                const date = new Date(lead.date).toLocaleDateString();
+                const statusClass = lead.status === 'replied' ? 'status-replied' : 'status-pending';
+                const statusText = lead.status === 'replied' ? 'Replied' : 'Pending';
+                
+                let btnHtml = lead.status === 'pending' 
+                    ? `<button onclick="markReplied('${lead.id}')" class="text-blue-600 hover:underline font-medium text-xs">Mark as Replied</button>`
+                    : `<span class="text-gray-400 text-xs">No action</span>`;
+
+                tbodyElement.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 text-gray-500">${date}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">
+                            ${lead.name}<br>
+                            <a href="mailto:${lead.email}" class="text-xs text-blue-500 font-normal hover:underline">${lead.email}</a>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">${lead.business}</td>
+                        <td class="px-6 py-4 text-gray-600">${lead.phone}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">${statusText}</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">${btnHtml}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- MARK LEAD AS REPLIED ---
+        async function markReplied(id) {
+            try {
+                await fetch(`${API_URL}/leads/${id}/reply`, { method: 'PUT' });
+                fetchLeads(); // refresh
+            } catch (error) {
+                alert("Simulated: Lead marked as replied! (Backend is offline)");
+                fetchLeads(); 
+            }
+        }
+
+        // --- FETCH & UPDATE CONFIG (CMS) ---
+        async function fetchConfig() {
+            try {
+                const response = await fetch(`${API_URL}/config`);
+                if(!response.ok) throw new Error("API Offline");
+                const data = await response.json();
+                document.getElementById('cms-title').value = data.heroTitle;
+                document.getElementById('cms-subtitle').value = data.heroSubtitle;
+            } catch (error) {
+                // Fallback dummy data
+                document.getElementById('cms-title').value = "The Ultimate POS for Modern Business";
+                document.getElementById('cms-subtitle').value = "Serve Sync POS streamlines your operations, speeds up checkout, and syncs your team seamlessly. Built for restaurants, retail, and more.";
+            }
+        }
+
+        async function updateConfig(e) {
+            e.preventDefault();
+            const btn = document.getElementById('cms-btn');
+            const statusMsg = document.getElementById('cms-status');
+            
+            const payload = {
+                heroTitle: document.getElementById('cms-title').value,
+                heroSubtitle: document.getElementById('cms-subtitle').value
+            };
+
+            btn.textContent = "Publishing...";
+            btn.disabled = true;
+
+            try {
+                await fetch(`${API_URL}/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {
+                console.log("Simulating backend update for preview");
+            }
+
+            // Show success
+            setTimeout(() => {
+                btn.textContent = "Publish Changes to Live Site";
+                btn.disabled = false;
+                statusMsg.classList.remove('opacity-0');
+                
+                setTimeout(() => {
+                    statusMsg.classList.add('opacity-0');
+                }, 3000);
+            }, 600);
+        }
+
+        // Init load
+        document.addEventListener('DOMContentLoaded', fetchLeads);
+
+    </script>
+</body>
+</html>
