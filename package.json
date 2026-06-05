@@ -1,4 +1,4 @@
-```json
+
 {
   "name": "serve-sync-pos-backend",
   "version": "1.0.0",
@@ -15,5 +15,3 @@
     "node": ">=14.0.0"
   }
 }
-
-```
