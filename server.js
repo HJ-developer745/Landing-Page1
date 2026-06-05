@@ -6,8 +6,13 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// Enable CORS for all domains so testing from other URLs is possible
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
 
 // Serve static files from the 'public' folder
@@ -26,7 +31,7 @@ let leads = [
         business: "Spice Route Cafe",
         email: "arjun.mehta@example.com",
         phone: "+91 98765 43210",
-        date: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+        date: new Date(Date.now() - 3600000 * 2).toISOString(),
         status: "pending",
         replyMessage: ""
     },
@@ -36,7 +41,7 @@ let leads = [
         business: "Café Bloom",
         email: "priya@cafebloom.com",
         phone: "+91 99123 45678",
-        date: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
+        date: new Date(Date.now() - 3600000 * 24).toISOString(),
         status: "replied",
         replyMessage: "Sent installation link and onboarding brochure via WhatsApp."
     }
@@ -59,7 +64,6 @@ app.post('/api/config', (req, res) => {
 
 // GET: All leads
 app.get('/api/leads', (req, res) => {
-    // Return newest first
     const sortedLeads = [...leads].sort((a, b) => new Date(b.date) - new Date(a.date));
     res.json(sortedLeads);
 });
@@ -102,11 +106,16 @@ app.put('/api/leads/:id/reply', (req, res) => {
     res.json({ message: "Reply updated successfully!", lead: leads[leadIndex] });
 });
 
-// DELETE: Remove a lead (Optional Admin convenience)
+// DELETE: Remove a lead
 app.delete('/api/leads/:id', (req, res) => {
     const { id } = req.params;
     leads = leads.filter(l => l.id !== id);
     res.json({ message: "Lead removed successfully." });
+});
+
+// Explicit route for admin.html to make sure it loads correctly
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 // Catch-all to serve index.html for unknown routes
@@ -117,6 +126,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`=================================================`);
     console.log(`🚀 Serve Sync POS Server Live at http://localhost:${PORT}`);
-    console.log(`📝 Admin panel is live at http://localhost:${PORT}/admin.html`);
     console.log(`=================================================`);
 });
