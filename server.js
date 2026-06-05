@@ -1,60 +1,72 @@
 
-// Serve Sync POS - Backend Server (Node.js + Express)
-// To run: 
-// 1. npm init -y
-// 2. npm install express cors
-// 3. node server.js
-
+// Serve Sync POS - Live Unified Backend (Node.js + Express)
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors()); // Allow cross-origin requests from frontend
-app.use(express.json()); // Parse JSON body
+app.use(cors());
+app.use(express.json());
 
-// --- In-Memory Database Simulation ---
-// In a real production app, you would use MongoDB, PostgreSQL, or Firebase here.
+// Serve static files from the 'public' folder
+app.use(express.static(path.join(__dirname, 'public')));
 
-// 1. Landing Page Dynamic Content Configuration
+// --- Memory Database ---
 let landingPageConfig = {
-    heroTitle: "Next-Gen POS for Modern Businesses",
-    heroSubtitle: "Serve Sync POS streamlines your operations, speeds up checkout, and syncs your team seamlessly. Built for restaurants, retail, and more.",
-    features: ["Cloud Syncing", "Real-time Analytics", "Inventory Management"]
+    heroTitle: "The POS system your<br/><em>business deserves</em>",
+    heroSub: "Serve Sync brings lightning-fast billing, smart inventory, and real-time reporting to restaurants, cafes, and retail shops — all in one elegant app."
 };
 
-// 2. Leads Database
 let leads = [
     {
         id: "1",
-        name: "John Doe",
-        email: "john@examplecafe.com",
-        business: "Example Cafe",
-        phone: "+1 234 567 890",
-        date: new Date().toISOString(),
-        status: "pending" // pending or replied
+        name: "Arjun Mehta",
+        business: "Spice Route Cafe",
+        email: "arjun.mehta@example.com",
+        phone: "+91 98765 43210",
+        date: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+        status: "pending",
+        replyMessage: ""
+    },
+    {
+        id: "2",
+        name: "Priya Patel",
+        business: "Café Bloom",
+        email: "priya@cafebloom.com",
+        phone: "+91 99123 45678",
+        date: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
+        status: "replied",
+        replyMessage: "Sent installation link and onboarding brochure via WhatsApp."
     }
 ];
 
 // --- API Endpoints ---
 
-// GET: Fetch Landing Page Configuration (Used by Landing Page)
+// GET: Landing page configuration
 app.get('/api/config', (req, res) => {
     res.json(landingPageConfig);
 });
 
-// POST: Update Landing Page Configuration (Used by Admin Panel)
+// POST: Update landing page configuration (CMS)
 app.post('/api/config', (req, res) => {
-    const { heroTitle, heroSubtitle } = req.body;
+    const { heroTitle, heroSub } = req.body;
     if (heroTitle) landingPageConfig.heroTitle = heroTitle;
-    if (heroSubtitle) landingPageConfig.heroSubtitle = heroSubtitle;
-    res.json({ message: "Configuration updated successfully", config: landingPageConfig });
+    if (heroSub) landingPageConfig.heroSub = heroSub;
+    res.json({ message: "Content updated successfully!", config: landingPageConfig });
 });
 
-// POST: Submit a new Lead / Download Request (Used by Landing Page)
+// GET: All leads
+app.get('/api/leads', (req, res) => {
+    // Return newest first
+    const sortedLeads = [...leads].sort((a, b) => new Date(b.date) - new Date(a.date));
+    res.json(sortedLeads);
+});
+
+// POST: Save a new lead (Download submission)
 app.post('/api/leads', (req, res) => {
-    const { name, email, business, phone } = req.body;
+    const { name, business, email, phone } = req.body;
     
     if (!name || !email) {
         return res.status(400).json({ error: "Name and Email are required." });
@@ -63,39 +75,48 @@ app.post('/api/leads', (req, res) => {
     const newLead = {
         id: Date.now().toString(),
         name,
+        business: business || "N/A",
         email,
-        business: business || 'N/A',
-        phone: phone || 'N/A',
+        phone: phone || "N/A",
         date: new Date().toISOString(),
-        status: "pending"
+        status: "pending",
+        replyMessage: ""
     };
 
     leads.push(newLead);
-    res.status(201).json({ message: "Details submitted successfully! Download link sent.", lead: newLead });
+    res.status(201).json({ message: "Lead recorded successfully!", lead: newLead });
 });
 
-// GET: Fetch all Leads (Used by Admin Panel)
-app.get('/api/leads', (req, res) => {
-    // Sort by newest first
-    const sortedLeads = [...leads].sort((a, b) => new Date(b.date) - new Date(a.date));
-    res.json(sortedLeads);
-});
-
-// PUT: Update Lead Status (e.g., mark as Replied) (Used by Admin Panel)
+// PUT: Send a reply / Mark lead as Replied
 app.put('/api/leads/:id/reply', (req, res) => {
-    const leadId = req.params.id;
-    const leadIndex = leads.findIndex(l => l.id === leadId);
+    const { id } = req.params;
+    const { replyMessage } = req.body;
     
+    const leadIndex = leads.findIndex(l => l.id === id);
     if (leadIndex === -1) {
-        return res.status(404).json({ error: "Lead not found" });
+        return res.status(404).json({ error: "Lead not found." });
     }
 
     leads[leadIndex].status = "replied";
-    res.json({ message: "Lead marked as replied", lead: leads[leadIndex] });
+    leads[leadIndex].replyMessage = replyMessage || "Replied successfully";
+    res.json({ message: "Reply updated successfully!", lead: leads[leadIndex] });
 });
 
-// Start Server
+// DELETE: Remove a lead (Optional Admin convenience)
+app.delete('/api/leads/:id', (req, res) => {
+    const { id } = req.params;
+    leads = leads.filter(l => l.id !== id);
+    res.json({ message: "Lead removed successfully." });
+});
+
+// Catch-all to serve index.html for unknown routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`Serve Sync POS Backend running on http://localhost:${PORT}`);
-    console.log(`API endpoints available at http://localhost:${PORT}/api/...`);
+    console.log(`=================================================`);
+    console.log(`🚀 Serve Sync POS Server Live at http://localhost:${PORT}`);
+    console.log(`📝 Admin panel is live at http://localhost:${PORT}/admin.html`);
+    console.log(`=================================================`);
 });
